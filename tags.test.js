@@ -67,3 +67,14 @@ test("every target is one axidps knows", () => {
   if (!sdk) return; // set AXIDPS_SDK=<axidps>/apps/axidps-overlay/sdk/axidps.js to check
   for (const ic of t.ICONS) assert.ok(sdk.includes(`"${ic.id}"`), ic.id);
 });
+
+test("only icons whose game colour is known show one", () => {
+  const game = Object.fromEntries(t.ICONS.map(ic => [ic.id, ic.game]));
+  // From the game's own palette.
+  assert.strictEqual(game["commander.red"], "#d93b3b");
+  assert.strictEqual(game["target"], "#ff0000");
+  // Markers, chevrons and badges have no known colour yet: shown as the game's, not a guess.
+  for (const id of ["marker.star", "marker.circle", "selection.blue", "squad.commander", "mentor"]) {
+    assert.strictEqual(game[id], null, id);
+  }
+});

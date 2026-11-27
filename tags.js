@@ -3,22 +3,23 @@
 (function () {
   "use strict";
 
-  // The icons, in the order the window lists them.
+  // The icons, in the order the window lists them, with the game's colour where it is known (the
+  // tag palette and targets). The rest are null until read from the game itself.
   const GROUPS = [
     {id: "tags", name: "Tags", icons: [
       ["commander.red", "Red", "#d93b3b"], ["commander.orange", "Orange", "#e38a31"],
       ["commander.yellow", "Yellow", "#dfc623"], ["commander.green", "Green", "#40d72e"],
       ["commander.cyan", "Cyan", "#55d8d5"], ["commander.blue", "Blue", "#1599fc"],
       ["commander.purple", "Purple", "#a91ec9"], ["commander.magenta", "Pink", "#fbb0ef"],
-      ["commander.white", "White", "#eeedee"], ["squad.commander", "Commander badge", "#f2c94c"],
-      ["squad.lieutenant", "Lieutenant badge", "#4c9df2"], ["mentor", "Mentor", "#3ecf7a"]]},
+      ["commander.white", "White", "#eeedee"], ["squad.commander", "Commander badge", null],
+      ["squad.lieutenant", "Lieutenant badge", null], ["mentor", "Mentor", null]]},
     {id: "markers", name: "Markers", icons: [
-      ["marker.arrow", "Arrow", "#e2b43c"], ["marker.circle", "Circle", "#3fae49"],
-      ["marker.heart", "Heart", "#c94fb8"], ["marker.square", "Square", "#3d7fe0"],
-      ["marker.star", "Star", "#4fbf5a"], ["marker.spiral", "Spiral", "#9a5ad9"],
-      ["marker.triangle", "Triangle", "#e0503d"], ["marker.cross", "Cross", "#d9a43a"],
-      ["selection.orange", "Orange chevron", "#f08a24"], ["selection.blue", "Blue chevron", "#2f8fef"],
-      ["selection.green", "Green chevron", "#3fbf4f"], ["selection.red", "Red chevron", "#e33a3a"]]},
+      ["marker.arrow", "Arrow", null], ["marker.circle", "Circle", null],
+      ["marker.heart", "Heart", null], ["marker.square", "Square", null],
+      ["marker.star", "Star", null], ["marker.spiral", "Spiral", null],
+      ["marker.triangle", "Triangle", null], ["marker.cross", "Cross", null],
+      ["selection.orange", "Orange chevron", null], ["selection.blue", "Blue chevron", null],
+      ["selection.green", "Green chevron", null], ["selection.red", "Red chevron", null]]},
     {id: "targets", name: "Targets", icons: [
       ["target", "Target", "#ff0000"], ["target.personal", "Personal target", "#ffa600"],
       ["target.combined", "Combined target", "#ff0080"], ["target.attack", "Attack target", "#ff3333"],
@@ -120,6 +121,10 @@
     return out;
   }
 
+  // What a row shows: the icon's colour, or the game's, or a plain grey when the game's isn't known.
+  const UNKNOWN = "#8a8f98";
+  const shown = (c, ic) => c || ic.game || UNKNOWN;
+
   const pure = {GROUPS, ICONS, CVD, PALETTE, defaults, normalize, colourOf, rulesFor, withPreset};
   if (typeof module !== "undefined" && module.exports) { module.exports = pure; return; }
 
@@ -178,9 +183,9 @@
       const off = s.icons[id] && s.icons[id].off;
       const c = colourOf(s, ic);
       const editable = s.preset === "custom" || s.preset === "cvd" || (s.preset === "single" && !id.startsWith("commander."));
-      return `<div class="row${off ? " off" : ""}">${tog("icon:" + id, !off)}${glyph(ic, c || ic.game)}` +
+      return `<div class="row${off ? " off" : ""}">${tog("icon:" + id, !off)}${glyph(ic, shown(c, ic))}` +
         `<span class="nm">${esc(ic.name)}</span>` +
-        (editable ? swatch("icon:" + id, c || ic.game) + (c && s.icons[id] && s.icons[id].color
+        (editable ? swatch("icon:" + id, c || ic.game || "#ffffff") + (c && s.icons[id] && s.icons[id].color
           ? `<button class="x" data-reset="${id}" data-tip="Back to the preset's colour">&times;</button>` : `<span class="x"></span>`)
           : `<span class="game" data-tip="The game's colour">${c ? "" : "game"}</span><span class="x"></span>`) + `</div>`;
     }).join("");
