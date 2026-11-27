@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="/_sdk/axidps.js"></script>
+<style>
+  body { padding: 8px; width: 300px; }
+  button { font: inherit; color: var(--text); background: var(--btn); border: var(--bw) solid var(--line);
+    border-radius: var(--rs); cursor: pointer; }
+  button:hover { background: var(--btn-hi); }
+  .sec { display: flex; flex-direction: column; gap: 6px; padding: 6px 0; }
+  .seg { display: flex; gap: 2px; background: var(--raise); border: 1px solid var(--line); border-radius: var(--rs); padding: 2px; }
+  .seg button { flex: 1; padding: 3px 0; font-size: 11px; color: var(--dim); background: transparent; border: 0; }
+  .seg button:hover { color: var(--text); background: var(--raise-hi); }
+  .seg button.on { color: var(--title); background: var(--btn-hi); }
+  .crow { display: flex; align-items: center; gap: 6px; min-height: 22px; }
+  .crow .lbl { flex: 1; color: var(--dim); }
+  .crow .seg { flex: none; }
+  .crow .seg button { padding: 3px 7px; }
+  .step { display: flex; align-items: center; gap: 3px; }
+  .step button { width: 22px; padding: 1px 0; }
+  .step b { width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+  .tog { width: 28px; height: 16px; border-radius: 8px; background: var(--line-hi); position: relative; flex: none; display: inline-block; cursor: pointer; }
+  .tog i { position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 6px; background: var(--dim); }
+  .tog.on { background: var(--accent); }
+  .tog.on i { left: 14px; background: var(--bg); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .tabs button { flex: 1; display: flex; align-items: center; gap: 6px; justify-content: center; padding: 4px 0;
+    background: transparent; border-color: transparent; color: var(--dim); }
+  .tabs button.on { color: var(--title); background: var(--raise-hi); border-color: var(--line-hi); }
+  .tabs .tog { transform: scale(.8); }
+  .list { display: flex; flex-direction: column; gap: 1px; padding: 6px 0; max-height: 260px; overflow-y: auto; }
+  .list.dim { opacity: .45; }
+  .list { scrollbar-width: thin; scrollbar-color: var(--line-hi) transparent; }
+  .list::-webkit-scrollbar { width: 6px; }
+  .list::-webkit-scrollbar-thumb { background: var(--line-hi); border-radius: 3px; }
+  .row { display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 4px; border-radius: var(--rs); }
+  .row:hover { background: var(--raise); }
+  .row.off .nm, .row.off svg { opacity: .4; }
+  .row .nm { flex: 1; }
+  .row .game { color: var(--faint); font-size: 11px; width: 20px; text-align: right; }
+  .sw { width: 20px; height: 16px; padding: 0; border: 1px solid var(--line-hi); border-radius: 4px; flex: none; }
+  .x { width: 14px; padding: 0; border: 0; background: transparent; color: var(--faint); display: inline-block; }
+  .x:hover { color: var(--text); background: transparent; }
+  .pal { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; padding: 6px; background: var(--raise);
+    border: 1px solid var(--line-hi); border-radius: var(--rs); }
+  .pal .sw { width: 100%; height: 18px; }
+  .foot { color: var(--faint); font-size: 11px; padding-top: 4px; border-top: 1px solid var(--line); }
+</style>
+<div id="app"></div>
+<script src="tags.js"></script>
