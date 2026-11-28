@@ -1,7 +1,7 @@
 {
   "id": "darkharasho.tag-colours",
   "name": "Tag Colours",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": "darkharasho",
   "api": 1,
   "permissions": ["textures"],

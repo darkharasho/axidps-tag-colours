@@ -11,7 +11,8 @@ It needs axidps's `textures` permission, which only verified plugins get.
 
 - **Preset**: the game's colours, Colour-blind (Okabe-Ito), one colour for every commander tag,
   or Custom (start from what's shown and change any icon).
-- **Tags / Markers / Targets**: switch each group on or off, and each icon in it.
+- **Tags / Markers / Targets**: switch each group on or off, and each icon in it. Each group has
+  its own Colour, Outline, Ring and Size (the settings under the list are for the tab you're on).
 - **Colour**: Shaded keeps the icon's shading; Tinted keeps its lightness; Flat fills it.
 - **Outline**: round, sharp or double, its width (on the world and on the minimap) and colour.
 - **Ring** behind each icon, and **Size**, from 50% to 300%. Each icon first grows inside its own

@@ -47,12 +47,15 @@
   const stepScale = (v, d) => Math.min(MAX_SCALE, Math.max(0.5, Math.round((v + d * 0.1) * 10) / 10));
   const clampNum = (v, lo, hi, d) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
 
+  const GROUP_IDS = GROUPS.map(g => g.id);
+  // How one tab's icons are drawn: colour style, outline, ring and size.
+  const defaultStyle = () => ({mode: "oklab", outline: {style: "round", width: 6, color: "#ffffff", minimap: 1},
+    ring: {on: false, color: "#000000"}, scale: 1});
+
   function defaults() {
-    return {v: 1, preset: "cvd", mode: "oklab", single: "#ffff00",
+    return {v: 2, preset: "cvd", single: "#ffff00",
       groups: {tags: true, markers: false, targets: false},
-      outline: {style: "round", width: 6, color: "#ffffff", minimap: 1},
-      ring: {on: false, color: "#000000"},
-      scale: 1, icons: {}};
+      style: Object.fromEntries(GROUP_IDS.map(g => [g, defaultStyle()])), icons: {}};
   }
 
   // Saved settings made whole and safe: unknown or bad values fall back to the defaults.
@@ -61,7 +64,19 @@
     if (!s || typeof s !== "object" || Array.isArray(s)) return d;
     const pick = (v, list, def) => (list.some(([k]) => k === v) ? v : def);
     const col = (v, def) => (typeof v === "string" && HEX.test(v.toLowerCase()) ? v.toLowerCase() : def);
-    const o = s.outline || {}, r = s.ring || {}, g = s.groups || {};
+    const g = s.groups || {};
+    // One tab's style, made safe. Settings from before per-tab styles (v1) had one shared style:
+    // every tab starts from it.
+    const styleOf = raw => {
+      const x = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+      const ds = defaultStyle(), o = x.outline || {}, r = x.ring || {};
+      return {mode: pick(x.mode, MODES, ds.mode),
+        outline: {style: pick(o.style, OUTLINES, ds.outline.style), width: clampNum(o.width, 0, 16, ds.outline.width),
+          color: col(o.color, ds.outline.color), minimap: clampNum(o.minimap, 0, 4, ds.outline.minimap)},
+        ring: {on: r.on === true, color: col(r.color, ds.ring.color)},
+        scale: clampNum(x.scale, 0.5, MAX_SCALE, 1)};
+    };
+    const per = s.style && typeof s.style === "object" ? s.style : null;
     const icons = {};
     for (const ic of ICONS) {
       const e = s.icons && s.icons[ic.id];
@@ -72,13 +87,9 @@
       if (typeof e.color === "string" && HEX.test(e.color.toLowerCase())) x.color = e.color.toLowerCase();
       if (Object.keys(x).length) icons[ic.id] = x;
     }
-    return {v: 1, preset: pick(s.preset, PRESETS, d.preset), mode: pick(s.mode, MODES, d.mode),
-      single: col(s.single, d.single),
+    return {v: 2, preset: pick(s.preset, PRESETS, d.preset), single: col(s.single, d.single),
       groups: {tags: g.tags !== false, markers: g.markers === true, targets: g.targets === true},
-      outline: {style: pick(o.style, OUTLINES, d.outline.style), width: clampNum(o.width, 0, 16, d.outline.width),
-        color: col(o.color, d.outline.color), minimap: clampNum(o.minimap, 0, 4, d.outline.minimap)},
-      ring: {on: r.on === true, color: col(r.color, d.ring.color)},
-      scale: clampNum(s.scale, 0.5, MAX_SCALE, 1), icons};
+      style: Object.fromEntries(GROUP_IDS.map(id => [id, styleOf(per ? per[id] : s)])), icons};
   }
 
   // What "One colour" paints: every tag colour, and the badge that marks the commander in the squad.
@@ -116,15 +127,14 @@
     for (const ic of ICONS) {
       if (s.icons[ic.id] && s.icons[ic.id].hide) { out.push({target: ic.id, opacity: 0}); continue; }
       if (!s.groups[ic.group] || (s.icons[ic.id] && s.icons[ic.id].off)) continue;
-      const r = {target: ic.id};
+      const r = {target: ic.id}, st = s.style[ic.group], o = st.outline;
       const c = colourOf(s, ic);
-      if (c) { r.mode = s.mode; r.color = c; }
-      if (s.outline.style !== "none" && (s.outline.width > 0 || s.outline.minimap > 0)) {
-        r.outline = {style: s.outline.style, width: s.outline.width, color: s.outline.color, outer: "auto",
-          minimap: s.outline.minimap};
+      if (c) { r.mode = st.mode; r.color = c; }
+      if (o.style !== "none" && (o.width > 0 || o.minimap > 0)) {
+        r.outline = {style: o.style, width: o.width, color: o.color, outer: "auto", minimap: o.minimap};
       }
-      if (s.ring.on) r.ring = {color: s.ring.color, outline: "auto"};
-      if (s.scale !== 1) r.scale = s.scale;
+      if (st.ring.on) r.ring = {color: st.ring.color, outline: "auto"};
+      if (st.scale !== 1) r.scale = st.scale;
       if (Object.keys(r).length > 1) out.push(r);
     }
     return out;
@@ -146,7 +156,7 @@
 
   // A small picture of each kind of icon, filled with its colour, outlined as the game will be.
   function glyph(ic, fill) {
-    const o = s.outline, w = o.style === "none" ? 0 : Math.max(0.8, o.width / 4);
+    const st = s.style[ic.group], o = st.outline, w = o.style === "none" ? 0 : Math.max(0.8, o.width / 4);
     const stroke = o.style === "none" ? "none" : o.color;
     const join = o.style === "diamond" ? "miter" : "round";
     let shape;
@@ -167,7 +177,7 @@
       const k = ic.id.split(".")[1];
       shape = k === "spiral" ? `<path d="${m[k]}" fill="none" stroke="${fill}" stroke-width="2.4"/>` : `<path d="${m[k]}"/>`;
     }
-    const ring = s.ring.on ? `<circle cx="12" cy="12" r="10.5" fill="none" stroke="${s.ring.color}" stroke-width="2"/>` : "";
+    const ring = st.ring.on ? `<circle cx="12" cy="12" r="10.5" fill="none" stroke="${st.ring.color}" stroke-width="2"/>` : "";
     return `<svg viewBox="-2 -2 28 28" width="22" height="22">${ring}<g fill="${fill}" stroke="${stroke}" ` +
       `stroke-width="${w}" stroke-linejoin="${join}" paint-order="stroke">${shape}</g></svg>`;
   }
@@ -186,7 +196,7 @@
   function tog(key, on) { return `<span class="tog${on ? " on" : ""}" data-tog="${key}"><i></i></span>`; }
 
   function render() {
-    const g = GROUPS.find(x => x.id === tab);
+    const g = GROUPS.find(x => x.id === tab), st = s.style[tab];
     const rows = g.icons.map(([id]) => {
       const ic = ICONS.find(x => x.id === id);
       const off = s.icons[id] && s.icons[id].off, hid = !!(s.icons[id] && s.icons[id].hide);
@@ -208,13 +218,14 @@
         `${tog("group:" + x.id, s.groups[x.id])}${esc(x.name)}</button>`).join("")}</div>` +
       `<div class="list${s.groups[tab] ? "" : " dim"}">${rows}</div>` +
       `<div class="sec">` +
-      `<div class="crow"><span class="lbl">Colour</span>${seg("mode", MODES, s.mode)}</div>` +
-      `<div class="crow"><span class="lbl">Outline</span>${seg("outline", OUTLINES, s.outline.style)}</div>` +
-      (s.outline.style !== "none" ? `<div class="crow"><span class="lbl">Width</span>${step("width", s.outline.width, "px")}` +
-        `${swatch("outline", s.outline.color)}</div>` +
-        `<div class="crow"><span class="lbl">On the minimap</span>${step("minimap", s.outline.minimap, "px")}</div>` : "") +
-      `<div class="crow"><span class="lbl">Ring</span>${tog("ring", s.ring.on)}${s.ring.on ? swatch("ring", s.ring.color) : ""}</div>` +
-      `<div class="crow"><span class="lbl">Size</span>${step("scale", Math.round(s.scale * 100), "%")}</div>` +
+      `<div class="sub">How ${esc(g.name.toLowerCase())} look</div>` +
+      `<div class="crow"><span class="lbl">Colour</span>${seg("mode", MODES, st.mode)}</div>` +
+      `<div class="crow"><span class="lbl">Outline</span>${seg("outline", OUTLINES, st.outline.style)}</div>` +
+      (st.outline.style !== "none" ? `<div class="crow"><span class="lbl">Width</span>${step("width", st.outline.width, "px")}` +
+        `${swatch("outline", st.outline.color)}</div>` +
+        `<div class="crow"><span class="lbl">On the minimap</span>${step("minimap", st.outline.minimap, "px")}</div>` : "") +
+      `<div class="crow"><span class="lbl">Ring</span>${tog("ring", st.ring.on)}${st.ring.on ? swatch("ring", st.ring.color) : ""}</div>` +
+      `<div class="crow"><span class="lbl">Size</span>${step("scale", Math.round(st.scale * 100), "%")}</div>` +
       `</div>` +
       (picking ? `<div class="pal">${PALETTE.map(c => `<button class="sw" data-color="${c}" style="background:${c}"></button>`).join("")}</div>` : "") +
       `<div class="foot">Changes apply in the game at once.</div>`;
@@ -228,8 +239,8 @@
 
   function setColour(key, c) {
     if (key === "single") s.single = c;
-    else if (key === "outline") s.outline.color = c;
-    else if (key === "ring") s.ring.color = c;
+    else if (key === "outline") s.style[tab].outline.color = c;
+    else if (key === "ring") s.style[tab].ring.color = c;
     else if (key.startsWith("icon:")) {
       const id = key.slice(5);
       s.icons[id] = Object.assign({}, s.icons[id], {color: c});
@@ -246,21 +257,21 @@
     if (segEl && t.dataset.v) {
       const k = segEl.dataset.seg;
       if (k === "preset") s = withPreset(s, t.dataset.v);
-      else if (k === "mode") s.mode = t.dataset.v;
-      else if (k === "outline") s.outline.style = t.dataset.v;
+      else if (k === "mode") s.style[tab].mode = t.dataset.v;
+      else if (k === "outline") s.style[tab].outline.style = t.dataset.v;
       return changed();
     }
     const stepEl = t.closest("[data-step]");
     if (stepEl && t.dataset.d) {
-      const d = Number(t.dataset.d), k = stepEl.dataset.step;
-      if (k === "width") s.outline.width = Math.min(16, Math.max(0, s.outline.width + d));
-      else if (k === "minimap") s.outline.minimap = Math.min(4, Math.max(0, s.outline.minimap + d * 0.5));
-      else if (k === "scale") s.scale = stepScale(s.scale, d);
+      const d = Number(t.dataset.d), k = stepEl.dataset.step, st = s.style[tab], o = st.outline;
+      if (k === "width") o.width = Math.min(16, Math.max(0, o.width + d));
+      else if (k === "minimap") o.minimap = Math.min(4, Math.max(0, o.minimap + d * 0.5));
+      else if (k === "scale") st.scale = stepScale(st.scale, d);
       return changed();
     }
     if (t.dataset.tog) {
       const k = t.dataset.tog;
-      if (k === "ring") s.ring.on = !s.ring.on;
+      if (k === "ring") s.style[tab].ring.on = !s.style[tab].ring.on;
       else if (k.startsWith("group:")) { const g = k.slice(6); s.groups[g] = !s.groups[g]; tab = g; }
       else if (k.startsWith("icon:")) {
         const id = k.slice(5), e2 = Object.assign({}, s.icons[id]);

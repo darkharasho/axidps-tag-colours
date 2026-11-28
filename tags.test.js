@@ -19,7 +19,8 @@ test("the default is colour-blind tags with a white outline", () => {
 });
 
 test("game colours with no outline sends nothing", () => {
-  const s = Object.assign(t.defaults(), { preset: "game", outline: { style: "none", width: 6 } });
+  const s = Object.assign(t.defaults(), { preset: "game" });
+  for (const g of ["tags", "markers", "targets"]) s.style[g].outline.style = "none";
   assert.deepStrictEqual(t.rulesFor(s), []);
 });
 
@@ -53,14 +54,15 @@ test("switching to custom keeps what was shown", () => {
 });
 
 test("normalize drops junk and clamps", () => {
-  const s = t.normalize({ preset: "rainbow", mode: 3, outline: { width: 99, color: "red", style: "zig" },
-    scale: 9, icons: { "commander.red": { color: "#ABCDEF", off: "yes" }, "evil": { color: "#000000" } } });
+  const s = t.normalize({ v: 2, preset: "rainbow", style: { tags: { mode: 3, outline: { width: 99, color: "red", style: "zig" },
+    scale: 9 }, markers: "junk" }, icons: { "commander.red": { color: "#ABCDEF", off: "yes" }, "evil": { color: "#000000" } } });
   assert.strictEqual(s.preset, "cvd");
-  assert.strictEqual(s.mode, "oklab");
-  assert.strictEqual(s.outline.width, 16);
-  assert.strictEqual(s.outline.color, "#ffffff");
-  assert.strictEqual(s.outline.style, "round");
-  assert.strictEqual(s.scale, 3);
+  assert.strictEqual(s.style.tags.mode, "oklab");
+  assert.strictEqual(s.style.tags.outline.width, 16);
+  assert.strictEqual(s.style.tags.outline.color, "#ffffff");
+  assert.strictEqual(s.style.tags.outline.style, "round");
+  assert.strictEqual(s.style.tags.scale, 3);
+  assert.deepStrictEqual(s.style.markers, t.defaults().style.markers);
   assert.deepStrictEqual(s.icons, { "commander.red": { color: "#abcdef" } });
 });
 
@@ -96,4 +98,47 @@ test("a hidden icon is hidden in the game, whatever its group or switch", () => 
   // Shown again: nothing for it while its group is off.
   const s2 = t.normalize({ groups: { markers: false }, icons: { "selection.red": { hide: false } } });
   assert.strictEqual(t.rulesFor(s2).some(x => x.target === "selection.red"), false);
+});
+
+test("settings saved before per-tab styles start every tab from the old shared ones", () => {
+  const old = { v: 1, preset: "cvd", mode: "solid", outline: { style: "double", width: 4, color: "#000000", minimap: 2 },
+    ring: { on: true, color: "#ff0000" }, scale: 2, groups: { tags: true, markers: true, targets: true }, icons: {} };
+  const s = t.normalize(old);
+  assert.strictEqual(s.v, 2);
+  for (const g of ["tags", "markers", "targets"]) {
+    assert.deepStrictEqual(s.style[g], { mode: "solid", outline: { style: "double", width: 4, color: "#000000", minimap: 2 },
+      ring: { on: true, color: "#ff0000" }, scale: 2 }, g);
+  }
+  // Nothing changes in the game until a tab is edited.
+  const rules = byTarget(t.rulesFor(s));
+  assert.strictEqual(rules["marker.star"].scale, 2);
+  assert.strictEqual(rules["commander.red"].mode, "solid");
+});
+
+test("each tab's size, outline and ring apply only to its own icons", () => {
+  const s = t.defaults();
+  s.groups.markers = true; s.groups.targets = true;
+  s.style.markers.scale = 2.5;
+  s.style.targets.outline.style = "none";
+  s.style.targets.ring = { on: true, color: "#00ff00" };
+  s.style.tags.mode = "blend";
+  const rules = byTarget(t.rulesFor(s));
+  assert.strictEqual(rules["marker.star"].scale, 2.5);
+  assert.strictEqual(rules["commander.red"].scale, undefined);
+  assert.strictEqual(rules["target"].scale, undefined);
+  assert.strictEqual(rules["target"].outline, undefined);
+  assert.deepStrictEqual(rules["target"].ring, { color: "#00ff00", outline: "auto" });
+  assert.ok(rules["commander.red"].outline);
+  assert.strictEqual(rules["commander.red"].ring, undefined);
+  assert.strictEqual(rules["commander.red"].mode, "blend");
+});
+
+test("every tab starts with the old defaults", () => {
+  const d = t.defaults();
+  assert.strictEqual(d.v, 2);
+  for (const g of ["tags", "markers", "targets"]) {
+    assert.deepStrictEqual(d.style[g], { mode: "oklab", outline: { style: "round", width: 6, color: "#ffffff", minimap: 1 },
+      ring: { on: false, color: "#000000" }, scale: 1 });
+  }
+  assert.notStrictEqual(d.style.tags, d.style.markers, "tabs don't share one object");
 });
