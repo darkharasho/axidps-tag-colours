@@ -78,12 +78,15 @@
       scale: clampNum(s.scale, 0.5, 2, 1), icons};
   }
 
+  // What "One colour" paints: every tag colour, and the badge that marks the commander in the squad.
+  const inSingle = id => id.startsWith("commander.") || id === "squad.commander";
+
   // The colour an icon gets, or null to keep the game's.
   function colourOf(s, ic) {
     const own = s.icons[ic.id] && s.icons[ic.id].color;
     switch (s.preset) {
       case "cvd": return own || CVD[ic.id] || null;
-      case "single": return ic.id.startsWith("commander.") ? s.single : own || null;
+      case "single": return inSingle(ic.id) ? s.single : own || null;
       case "custom": return own || null;
       default: return null;
     }
@@ -185,7 +188,7 @@
       const ic = ICONS.find(x => x.id === id);
       const off = s.icons[id] && s.icons[id].off, hid = !!(s.icons[id] && s.icons[id].hide);
       const c = colourOf(s, ic);
-      const editable = s.preset === "custom" || s.preset === "cvd" || (s.preset === "single" && !id.startsWith("commander."));
+      const editable = s.preset === "custom" || s.preset === "cvd" || (s.preset === "single" && !inSingle(id));
       return `<div class="row${off ? " off" : ""}">${tog("icon:" + id, !off)}${glyph(ic, shown(c, ic))}` +
         `<span class="nm">${esc(ic.name)}</span>` +
         `<button class="hide${hid ? " on" : ""}" data-hide="${id}" data-tip="${hid ? "Hidden in the game. Show it again" : "Hide it in the game"}">` +

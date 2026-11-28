@@ -23,11 +23,13 @@ test("game colours with no outline sends nothing", () => {
   assert.deepStrictEqual(t.rulesFor(s), []);
 });
 
-test("one colour recolours every commander tag only", () => {
+test("one colour recolours every commander tag and the commander badge only", () => {
   const s = Object.assign(t.defaults(), { preset: "single", single: "#00E5FF" });
   const rules = byTarget(t.rulesFor(s));
   for (const id of Object.keys(t.CVD)) assert.strictEqual(rules[id].color, "#00e5ff");
-  assert.strictEqual(rules["squad.commander"].color, undefined);
+  assert.strictEqual(rules["squad.commander"].color, "#00e5ff");
+  assert.strictEqual(rules["squad.lieutenant"].color, undefined);
+  assert.strictEqual(rules["mentor"].color, undefined);
 });
 
 test("icons switched off and groups switched on", () => {
