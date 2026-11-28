@@ -38,6 +38,9 @@
   .row .nm { flex: 1; }
   .row .game { color: var(--faint); font-size: 11px; width: 20px; text-align: right; }
   .sw { width: 20px; height: 16px; padding: 0; border: 1px solid var(--line-hi); border-radius: 4px; flex: none; }
+  .hide { padding: 1px 6px; font-size: 10.5px; color: var(--dim); background: transparent; border: 1px solid var(--line); border-radius: var(--rs); flex: none; }
+  .hide:hover { color: var(--text); border-color: var(--line-hi); }
+  .hide.on { color: var(--bad); border-color: var(--bad); }
   .x { width: 14px; padding: 0; border: 0; background: transparent; color: var(--faint); display: inline-block; }
   .x:hover { color: var(--text); background: transparent; }
   .pal { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; padding: 6px; background: var(--raise);

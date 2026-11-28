@@ -78,3 +78,13 @@ test("only icons whose game colour is known show one", () => {
     assert.strictEqual(game[id], null, id);
   }
 });
+
+test("a hidden icon is hidden in the game, whatever its group or switch", () => {
+  const s = t.normalize({ groups: { markers: false }, icons: { "selection.red": { hide: true, off: true } } });
+  assert.deepStrictEqual(s.icons["selection.red"], { off: true, hide: true });
+  const r = t.rulesFor(s).filter(x => x.target === "selection.red");
+  assert.deepStrictEqual(r, [{ target: "selection.red", opacity: 0 }]);
+  // Shown again: nothing for it while its group is off.
+  const s2 = t.normalize({ groups: { markers: false }, icons: { "selection.red": { hide: false } } });
+  assert.strictEqual(t.rulesFor(s2).some(x => x.target === "selection.red"), false);
+});

@@ -65,6 +65,7 @@
       if (!e || typeof e !== "object") continue;
       const x = {};
       if (e.off === true) x.off = true;
+      if (e.hide === true) x.hide = true;
       if (typeof e.color === "string" && HEX.test(e.color.toLowerCase())) x.color = e.color.toLowerCase();
       if (Object.keys(x).length) icons[ic.id] = x;
     }
@@ -101,11 +102,13 @@
     return s;
   }
 
-  // The rules for the game: one per icon that is on in an enabled group and changes something.
+  // The rules for the game: one per icon that is on in an enabled group and changes something, and
+  // one that hides each hidden icon (whatever its group or switch).
   function rulesFor(raw) {
     const s = normalize(raw);
     const out = [];
     for (const ic of ICONS) {
+      if (s.icons[ic.id] && s.icons[ic.id].hide) { out.push({target: ic.id, opacity: 0}); continue; }
       if (!s.groups[ic.group] || (s.icons[ic.id] && s.icons[ic.id].off)) continue;
       const r = {target: ic.id};
       const c = colourOf(s, ic);
@@ -180,11 +183,13 @@
     const g = GROUPS.find(x => x.id === tab);
     const rows = g.icons.map(([id]) => {
       const ic = ICONS.find(x => x.id === id);
-      const off = s.icons[id] && s.icons[id].off;
+      const off = s.icons[id] && s.icons[id].off, hid = !!(s.icons[id] && s.icons[id].hide);
       const c = colourOf(s, ic);
       const editable = s.preset === "custom" || s.preset === "cvd" || (s.preset === "single" && !id.startsWith("commander."));
       return `<div class="row${off ? " off" : ""}">${tog("icon:" + id, !off)}${glyph(ic, shown(c, ic))}` +
         `<span class="nm">${esc(ic.name)}</span>` +
+        `<button class="hide${hid ? " on" : ""}" data-hide="${id}" data-tip="${hid ? "Hidden in the game. Show it again" : "Hide it in the game"}">` +
+        `${hid ? "Hidden" : "Hide"}</button>` +
         (editable ? swatch("icon:" + id, c || ic.game || "#ffffff") + (c && s.icons[id] && s.icons[id].color
           ? `<button class="x" data-reset="${id}" data-tip="Back to the preset's colour">&times;</button>` : `<span class="x"></span>`)
           : `<span class="game" data-tip="The game's colour">${c ? "" : "game"}</span><span class="x"></span>`) + `</div>`;
@@ -257,6 +262,12 @@
         s.icons[id] = e2;
       }
       e.stopPropagation();
+      return changed();
+    }
+    if (t.dataset.hide) {
+      const e2 = Object.assign({}, s.icons[t.dataset.hide]);
+      if (e2.hide) delete e2.hide; else e2.hide = true;
+      s.icons[t.dataset.hide] = e2;
       return changed();
     }
     if (t.dataset.reset) {
