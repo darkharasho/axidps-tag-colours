@@ -20,7 +20,8 @@ It needs axidps's `textures` permission, which only verified plugins get.
 Markers, chevrons and badges show in grey in the list until their colours are read from the game;
 in game they keep the game's own colours unless you choose one.
 
-Changes apply in the game at once.
+Changes apply in the game at once. On axidps 0.2.0-rc.21 or later, **Pop out** on its page shows
+just the settings in a small window beside the game, so you can watch the icons change.
 
 ## Thanks
 
