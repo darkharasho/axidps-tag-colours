@@ -42,6 +42,9 @@
   const OUTLINES = [["none", "None"], ["round", "Round"], ["diamond", "Sharp"], ["double", "Double"]];
 
   const HEX = /^#[0-9a-f]{6}$/;
+  // Size: up to 300% (axidps rc.21 and later draw past the icon's own picture; older stop at 200%).
+  const MAX_SCALE = 3;
+  const stepScale = (v, d) => Math.min(MAX_SCALE, Math.max(0.5, Math.round((v + d * 0.1) * 10) / 10));
   const clampNum = (v, lo, hi, d) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
 
   function defaults() {
@@ -75,7 +78,7 @@
       outline: {style: pick(o.style, OUTLINES, d.outline.style), width: clampNum(o.width, 0, 16, d.outline.width),
         color: col(o.color, d.outline.color), minimap: clampNum(o.minimap, 0, 4, d.outline.minimap)},
       ring: {on: r.on === true, color: col(r.color, d.ring.color)},
-      scale: clampNum(s.scale, 0.5, 2, 1), icons};
+      scale: clampNum(s.scale, 0.5, MAX_SCALE, 1), icons};
   }
 
   // What "One colour" paints: every tag colour, and the badge that marks the commander in the squad.
@@ -131,7 +134,7 @@
   const UNKNOWN = "#8a8f98";
   const shown = (c, ic) => c || ic.game || UNKNOWN;
 
-  const pure = {GROUPS, ICONS, CVD, PALETTE, defaults, normalize, colourOf, rulesFor, withPreset};
+  const pure = {GROUPS, ICONS, CVD, PALETTE, defaults, normalize, colourOf, rulesFor, withPreset, stepScale};
   if (typeof module !== "undefined" && module.exports) { module.exports = pure; return; }
 
   // ---- the window ------------------------------------------------------------------------------
@@ -252,7 +255,7 @@
       const d = Number(t.dataset.d), k = stepEl.dataset.step;
       if (k === "width") s.outline.width = Math.min(16, Math.max(0, s.outline.width + d));
       else if (k === "minimap") s.outline.minimap = Math.min(4, Math.max(0, s.outline.minimap + d * 0.5));
-      else if (k === "scale") s.scale = Math.min(2, Math.max(0.5, Math.round((s.scale + d * 0.1) * 10) / 10));
+      else if (k === "scale") s.scale = stepScale(s.scale, d);
       return changed();
     }
     if (t.dataset.tog) {

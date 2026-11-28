@@ -14,8 +14,10 @@ It needs axidps's `textures` permission, which only verified plugins get.
 - **Tags / Markers / Targets**: switch each group on or off, and each icon in it.
 - **Colour**: Shaded keeps the icon's shading; Tinted keeps its lightness; Flat fills it.
 - **Outline**: round, sharp or double, its width (on the world and on the minimap) and colour.
-- **Ring** behind each icon, and **Size**. Each icon grows only as far as its own picture has
-  room: past that axidps stops, so it is never cut off (needs axidps 0.2.0-rc.16 or later).
+- **Ring** behind each icon, and **Size**, from 50% to 300%. Each icon first grows inside its own
+  picture, as far as it has room; past that axidps draws it bigger on screen (needs axidps
+  0.2.0-rc.21 or later; older versions stop where the picture ends). The squad list's commander
+  and lieutenant badges keep their size, so they don't cover the names beside them.
 
 Markers, chevrons and badges show in grey in the list until their colours are read from the game;
 in game they keep the game's own colours unless you choose one.

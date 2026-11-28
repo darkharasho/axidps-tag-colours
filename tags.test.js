@@ -60,8 +60,15 @@ test("normalize drops junk and clamps", () => {
   assert.strictEqual(s.outline.width, 16);
   assert.strictEqual(s.outline.color, "#ffffff");
   assert.strictEqual(s.outline.style, "round");
-  assert.strictEqual(s.scale, 2);
+  assert.strictEqual(s.scale, 3);
   assert.deepStrictEqual(s.icons, { "commander.red": { color: "#abcdef" } });
+});
+
+test("Size steps by 10% from 50% to 300%", () => {
+  assert.strictEqual(t.stepScale(1, 1), 1.1);
+  assert.strictEqual(t.stepScale(2, 1), 2.1);
+  assert.strictEqual(t.stepScale(3, 1), 3);
+  assert.strictEqual(t.stepScale(0.5, -1), 0.5);
 });
 
 test("every target is one axidps knows", () => {
