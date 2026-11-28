@@ -1,13 +1,13 @@
 {
   "id": "darkharasho.tag-colours",
   "name": "Tag Colours",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "darkharasho",
   "api": 1,
   "permissions": ["textures"],
   "windows": [
     {"id": "settings", "title": "Tag Colours", "entry": "settings.html",
      "description": "recolour and outline commander tags, markers and targets",
-     "icon": "sliders", "open": false, "place": "beside-meter"}
+     "icon": "sliders", "open": false, "place": "beside-meter", "in": "hub"}
   ]
 }
